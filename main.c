@@ -16,9 +16,9 @@ void cycle(void)
 
 	ObjectArray objects = {NULL, 0, 0};
 
-	for (int i = 0; i < 10; i++)
+	for (int i = 0; i < 2000; i++)
 	{
-		addObject(&objects, (Object){.position = {randRange(-10, 10), randRange(-10, 10)}, .shape = circle, .signatureSize = randRange(1, 1), .id = i});
+		addObject(&objects, (Object){.position = {randRange(-1500, 1500), randRange(-10, 10)}, .shape = circle, .signatureSize = randRange(1, 1), .id = i});
 	}
 
 	Vector2 playerPos = {0, 0};
@@ -46,6 +46,8 @@ void cycle(void)
 	}
 
 	terminal_init();
+
+    printf("GAME STARTED...");
 
 	while(1)
 	{
@@ -109,9 +111,9 @@ void cycle(void)
 			{
 				printf("|%d|", i);
 			}
-			else if (raycastPoll((Ray){.origin = playerPos, .direction = {-cos(math_rad), sin(math_rad)}}, &objects, &hit))
+			if (raycastPoll((Ray){.origin = playerPos, .direction = {-cos(math_rad), sin(math_rad)}}, &objects, &hit))
 			{
-				printf("%d", hit->id);
+				printf("%c", abs(hit->id % 10) + '0');
 			}
 			else
 			{

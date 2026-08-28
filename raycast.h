@@ -1,5 +1,6 @@
 #include "array.h"
 #include <float.h>
+#include <stdbool.h>
 
 bool Raycast(Ray ray, Object target)
 {
