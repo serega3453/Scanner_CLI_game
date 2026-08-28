@@ -1,40 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
 #include "raycast.h"
+#include "terminal.h"
 
-#ifdef _WIN32
-    #include <conio.h>
-    #define GETCH() _getch()
-#else
-    #include <termios.h>
-    #include <unistd.h>
-    
-    static struct termios old;
-    
-    void enableRaw() {
-        tcgetattr(STDIN_FILENO, &old);
-        struct termios new = old;
-        new.c_lflag &= ~(ICANON | ECHO);
-        tcsetattr(STDIN_FILENO, TCSAFLUSH, &new);
-    }
-    
-    void disableRaw() {
-        tcsetattr(STDIN_FILENO, TCSAFLUSH, &old);
-    }
-    
-    int getch() {
-        enableRaw();
-        int ch = getchar();
-        disableRaw();
-        return ch;
-    }
-    
-    #define GETCH() getch()
-#endif
-
-float randRange(float min, float max) {
-    return min + (max - min) * ((float)rand() / RAND_MAX);
+float randRange(float min, float max)
+{
+	return min + (max - min) * ((float)rand() / RAND_MAX);
 }
 
 void cycle(void)
@@ -72,42 +45,41 @@ void cycle(void)
 		scanStep = 1;
 	}
 
+	terminal_init();
+
 	while(1)
 	{
-		int ch = GETCH();
+		int ch = terminal_getch();
+
 		if (renderMode == 1)
 		{
-			#ifdef _WIN32
-            	system("cls");
-        	#else
-            	system("clear");
-        	#endif
+			terminal_clear();
 		}
 
 		float angleRad = playerTurn * 3.14159 / 180;
 
-		if (ch == 'w' || ch == 'W') 
+		if (ch == 'w' || ch == 'W')
 		{
-		    playerPos.x += sin(angleRad) * step;
-		    playerPos.y += cos(angleRad) * step;
+			playerPos.x += sin(angleRad) * step;
+			playerPos.y += cos(angleRad) * step;
 		}
 
-		if (ch == 's' || ch == 'S') 
+		if (ch == 's' || ch == 'S')
 		{
-		    playerPos.x -= sin(angleRad) * step;
-		    playerPos.y -= cos(angleRad) * step;
+			playerPos.x -= sin(angleRad) * step;
+			playerPos.y -= cos(angleRad) * step;
 		}
 
-		if (ch == 'a' || ch == 'A') 
+		if (ch == 'a' || ch == 'A')
 		{
-		    playerPos.x -= cos(angleRad) * step;
-		    playerPos.y += sin(angleRad) * step;
+			playerPos.x -= cos(angleRad) * step;
+			playerPos.y += sin(angleRad) * step;
 		}
 
-		if (ch == 'd' || ch == 'D') 
+		if (ch == 'd' || ch == 'D')
 		{
-		    playerPos.x += cos(angleRad) * step;
-		    playerPos.y -= sin(angleRad) * step;
+			playerPos.x += cos(angleRad) * step;
+			playerPos.y -= sin(angleRad) * step;
 		}
 
 		if (ch == 'e' || ch == 'E')
@@ -119,9 +91,10 @@ void cycle(void)
 		{
 			playerTurn -= turnStep;
 		}
-		
-		if (ch == 27 || ch == 27)
+
+		if (ch == 27)
 		{
+			terminal_restore();
 			return;
 		}
 
@@ -151,8 +124,6 @@ void cycle(void)
 
 int main(void)
 {
-
-
 	cycle();
 
 	return 0;
