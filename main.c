@@ -10,15 +10,47 @@ float randRange(float min, float max)
 	return min + (max - min) * ((float)rand() / RAND_MAX);
 }
 
+void header_print(float step)
+{
+	printf("Speed: %10f\n", step);
+}
+
+void rendering(float scanStart, float scanStop, float scanStep, float playerTurn, Vector2 playerPos, ObjectArray* objects)
+{
+	for (int i = scanStart; i < scanStop; i += scanStep)
+	{
+		float rad = (i + 180 + playerTurn) * 3.14159 / 180;
+		float math_rad = rad + 3.14159/2;
+
+		Object* hit;
+
+		if (i % 45 == 0)
+		{
+			printf("|%d|", i);
+		}
+
+		if (raycastPoll((Ray){.origin = playerPos, .direction = {-cos(math_rad), sin(math_rad)}}, objects, &hit))
+		{
+			printf("%c", abs(hit->id % 10) + '0');
+		}
+
+		else
+		{
+			printf(".");
+		}
+	}
+	printf("\n\n");
+}
+
 void cycle(void)
 {
 	srand(time(NULL));
 
 	ObjectArray objects = {NULL, 0, 0};
 
-	for (int i = 0; i < 2000; i++)
+	for (int i = 0; i < 1000; i++)
 	{
-		addObject(&objects, (Object){.position = {randRange(-1500, 1500), randRange(-10, 10)}, .shape = circle, .signatureSize = randRange(1, 1), .id = i});
+		addObject(&objects, (Object){.position = {randRange(-1000, 1000), randRange(-1500, 1500)}, .shape = circle, .signatureSize = randRange(1, 10), .id = i});
 	}
 
 	Vector2 playerPos = {0, 0};
@@ -60,6 +92,16 @@ void cycle(void)
 
 		float angleRad = playerTurn * 3.14159 / 180;
 
+		if (ch == 'r' || ch == 'R')
+		{
+			step += 0.1;
+		}
+
+		if (ch == 'f' || ch == 'F')
+		{
+			step -= 0.1;
+		}
+
 		if (ch == 'w' || ch == 'W')
 		{
 			playerPos.x += sin(angleRad) * step;
@@ -94,33 +136,20 @@ void cycle(void)
 			playerTurn -= turnStep;
 		}
 
+		if (ch == ' ')
+		{
+
+		}
+
 		if (ch == 27)
 		{
 			terminal_restore();
 			return;
 		}
 
-		for (int i = scanStart; i < scanStop; i += scanStep)
-		{
-			float rad = (i + 180 + playerTurn) * 3.14159 / 180;
-			float math_rad = rad + 3.14159/2;
+		header_print(step);
 
-			Object* hit;
-
-			if (i % 45 == 0)
-			{
-				printf("|%d|", i);
-			}
-			if (raycastPoll((Ray){.origin = playerPos, .direction = {-cos(math_rad), sin(math_rad)}}, &objects, &hit))
-			{
-				printf("%c", abs(hit->id % 10) + '0');
-			}
-			else
-			{
-				printf(".");
-			}
-		}
-		printf("\n\n");
+		rendering(scanStart, scanStop, scanStep, playerTurn, playerPos, &objects);
 	}
 }
 

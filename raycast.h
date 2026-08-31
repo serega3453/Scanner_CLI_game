@@ -24,7 +24,7 @@ bool Raycast(Ray ray, Object target)
 
 bool raycastPoll(Ray ray, ObjectArray* objects, Object** hit)
 {
-    float maxDist = 20;
+    float maxDist = 50;
     float closestDist = FLT_MAX;
 	for (int i = 0; i < objects->count; i++)
 	{
