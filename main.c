@@ -35,6 +35,8 @@ const char* colors[] =
 
 IntArray touched = {0, 0, 0};
 
+int maxObjects = 2000;
+
 float randRange(float min, float max)
 {
 	return min + (max - min) * ((float)rand() / RAND_MAX);
@@ -58,12 +60,12 @@ void touchObject(IntArray* touched, Object* collision)
 	addInt(touched, collision->id);
 }
 
-void footer_print(float step, float turnStep, Object* collision, bool touchFlag)
+void footer_print(float step, float turnStep, Object* collision)
 {
 	printf("%-15s%10.1f\n", "Speed: ", step);
 	printf("%-15s%10.1f\n", "Turn speed: ", turnStep);
 	
-	if (collision != NULL && touchFlag)
+	if (collision != NULL)
 	{
 		printf("%-15s%10d\n", "Touching: ", collision->id);
 	}
@@ -72,7 +74,7 @@ void footer_print(float step, float turnStep, Object* collision, bool touchFlag)
 		printf("%-15s%10s\n", "", "");
 	}
 
-	printf("%-15s%10d\n", "Touch counter: ", touched.count);
+	printf("\n%s%d%s%d%s\n", "Touched ", touched.count, " out of ", maxObjects, " objects");
 }
 
 Object* rendering(float scanStart, float scanStop, float scanStep, float playerTurn, Vector2 playerPos, ObjectArray* objects)
@@ -122,7 +124,7 @@ void cycle(void)
 
 	ObjectArray objects = {NULL, 0, 0};
 
-	for (int i = 0; i < 1000; i++)
+	for (int i = 0; i < maxObjects; i++)
 	{
 		addObject(&objects, (Object){.position = {randRange(-1000, 1000), randRange(-1500, 1500)}, .shape = circle, .signatureSize = randRange(1, 10), .id = i, .alive = true});
 	}
@@ -138,8 +140,6 @@ void cycle(void)
 
 	int renderMode = 0;
 	int scanMode = 360;
-
-	bool touchFlag = false;
 
 	printf("1 - one line, 0 - not one line\n");
 	scanf("%d", &renderMode);
@@ -169,9 +169,7 @@ void cycle(void)
 
 		Object* collision = rendering(scanStart, scanStop, scanStep, playerTurn, playerPos, &objects);
 
-		footer_print(step, turnStep, collision, touchFlag);
-
-		touchFlag = false;
+		footer_print(step, turnStep, collision);
 
 		float angleRad = playerTurn * 3.14159 / 180;
 
@@ -218,7 +216,6 @@ void cycle(void)
 				if (collision != NULL)
 				{
 					touchObject(&touched, collision);
-					touchFlag = true;
 				}
 				break;
 			case ' ':
