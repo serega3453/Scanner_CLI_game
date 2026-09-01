@@ -7,6 +7,7 @@ typedef struct
 	Shape shape;
 	float signatureSize;
 	int id;
+	bool alive;
 } Object;
 
 typedef struct

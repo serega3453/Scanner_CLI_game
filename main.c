@@ -16,7 +16,7 @@
 #define BRIGHT_GREEN "\033[92m"
 #define BRIGHT_YELLOW "\033[93m"
 #define BRIGHT_BLUE "\033[94m"
-#define RESET "\033[30m"
+#define RESET "\033[37m"
 
 const char* colors[] = 
 {
@@ -33,7 +33,7 @@ const char* colors[] =
 	RESET
 };
 
-int touchCounter = 0;
+IntArray touched = {0, 0, 0};
 
 float randRange(float min, float max)
 {
@@ -45,20 +45,34 @@ void header_print(float step)
 	printf("Speed: %10.1f\n", step);
 }
 
+void touchObject(IntArray* touched, Object* collision)
+{
+	for (int i = 0; i < touched->count; i++)
+	{
+		if (touched->items[i] == collision->id)
+		{
+			return;
+		}
+	}
+	collision->alive = false;
+	addInt(touched, collision->id);
+}
+
 void footer_print(float step, float turnStep, Object* collision, bool touchFlag)
 {
 	printf("%-15s%10.1f\n", "Speed: ", step);
 	printf("%-15s%10.1f\n", "Turn speed: ", turnStep);
-	printf("%-15s%10d\n", "Touch counter: ", touchCounter);
+	
 	if (collision != NULL && touchFlag)
 	{
 		printf("%-15s%10d\n", "Touching: ", collision->id);
-		touchCounter++;
 	}
 	else
 	{
 		printf("%-15s%10s\n", "", "");
 	}
+
+	printf("%-15s%10d\n", "Touch counter: ", touched.count);
 }
 
 Object* rendering(float scanStart, float scanStop, float scanStep, float playerTurn, Vector2 playerPos, ObjectArray* objects)
@@ -78,13 +92,20 @@ Object* rendering(float scanStart, float scanStop, float scanStep, float playerT
 
 		if (raycastPoll((Ray){.origin = playerPos, .direction = {-cos(math_rad), sin(math_rad)}}, objects, &hit, &collision))
 		{
-			printf("%s%d\033[0m", colors[abs((hit->id * 7) % 10)], abs(hit->id % 10));
+			if (hit->alive)
+			{
+				printf("%s%d\033[0m", colors[abs((hit->id * 7) % 10)], abs(hit->id % 10));
+			}
+			else
+			{
+				printf("%s%d\033[0m", RESET, abs(hit->id % 10));
+			}
+
 			if (collision)
 			{
 				collisionObject = hit;
 			}
 		}
-
 		else
 		{
 			printf(".");
@@ -103,7 +124,7 @@ void cycle(void)
 
 	for (int i = 0; i < 1000; i++)
 	{
-		addObject(&objects, (Object){.position = {randRange(-1000, 1000), randRange(-1500, 1500)}, .shape = circle, .signatureSize = randRange(1, 10), .id = i});
+		addObject(&objects, (Object){.position = {randRange(-1000, 1000), randRange(-1500, 1500)}, .shape = circle, .signatureSize = randRange(1, 10), .id = i, .alive = true});
 	}
 
 	Vector2 playerPos = {0, 0};
@@ -196,6 +217,7 @@ void cycle(void)
 			case 'z':
 				if (collision != NULL)
 				{
+					touchObject(&touched, collision);
 					touchFlag = true;
 				}
 				break;

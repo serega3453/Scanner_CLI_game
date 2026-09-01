@@ -27,25 +27,26 @@ bool raycastPoll(Ray ray, ObjectArray* objects, Object** hit, bool* collision)
     float maxDist = 50;
     float closestDist = FLT_MAX;
     *collision = false;
-	for (int i = 0; i < objects->count; i++)
-	{
-		if (Raycast(ray, objects->items[i]))
-		{
-			float dist = Vector2Distance(ray.origin, objects->items[i].position);
-            if (dist < maxDist)
+
+    for (int i = 0; i < objects->count; i++)
+    {
+        float dist = Vector2Distance(ray.origin, objects->items[i].position);
+        if (dist < maxDist)
+        {
+            if (Raycast(ray, objects->items[i]))
             {
                 if (dist < closestDist)
                 {
                     closestDist = dist;
                     *hit = &objects->items[i];
                 }
+                if (dist <= objects->items[i].signatureSize + 1)
+                {
+                    *collision = true;
+                }
             }
-            if (dist <= objects->items[i].signatureSize + 1)
-            {
-                *collision = true;
-            }
-		}
-	}
+        }
+    }
 
     if (closestDist == FLT_MAX)
     {

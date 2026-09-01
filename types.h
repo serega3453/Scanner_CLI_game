@@ -6,7 +6,7 @@ typedef struct
 
 float Vector2Distance(Vector2 a, Vector2 b)
 {
-	return sqrt(pow((b.x - a.x), 2) + pow((b.y - a.y), 2));
+	return sqrt((b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y));
 }
 
 Vector2 Vector2Sub(Vector2 a, Vector2 b)
