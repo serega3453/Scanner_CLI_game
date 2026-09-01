@@ -33,6 +33,8 @@ const char* colors[] =
 	RESET
 };
 
+int touchCounter = 0;
+
 float randRange(float min, float max)
 {
 	return min + (max - min) * ((float)rand() / RAND_MAX);
@@ -43,17 +45,19 @@ void header_print(float step)
 	printf("Speed: %10.1f\n", step);
 }
 
-void footer_print(float step, float turnStep, Object* collision)
+void footer_print(float step, float turnStep, Object* collision, bool touchFlag)
 {
 	printf("%-15s%10.1f\n", "Speed: ", step);
 	printf("%-15s%10.1f\n", "Turn speed: ", turnStep);
-	if (collision != NULL)
+	printf("%-15s%10d\n", "Touch counter: ", touchCounter);
+	if (collision != NULL && touchFlag)
 	{
 		printf("%-15s%10d\n", "Touching: ", collision->id);
+		touchCounter++;
 	}
 	else
 	{
-		printf("%-15s%10s\n", "Touching: ", "nothing");
+		printf("%-15s%10s\n", "", "");
 	}
 }
 
@@ -113,6 +117,9 @@ void cycle(void)
 
 	int renderMode = 0;
 	int scanMode = 360;
+
+	bool touchFlag = false;
+
 	printf("1 - one line, 0 - not one line\n");
 	scanf("%d", &renderMode);
 
@@ -141,7 +148,9 @@ void cycle(void)
 
 		Object* collision = rendering(scanStart, scanStop, scanStep, playerTurn, playerPos, &objects);
 
-		footer_print(step, turnStep, collision);
+		footer_print(step, turnStep, collision, touchFlag);
+
+		touchFlag = false;
 
 		float angleRad = playerTurn * 3.14159 / 180;
 
@@ -183,6 +192,12 @@ void cycle(void)
 				break;
 			case 'q':
 				playerTurn -= turnStep;
+				break;
+			case 'z':
+				if (collision != NULL)
+				{
+					touchFlag = true;
+				}
 				break;
 			case ' ':
 				break;
