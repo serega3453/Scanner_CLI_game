@@ -6,11 +6,11 @@ bool Raycast(Ray ray, Object target)
 {
     Vector2 localPosition = Vector2Sub(ray.origin, target.position);
     
-    float a = pow(ray.direction.x, 2) + pow(ray.direction.y, 2);
-    float b = 2 * (localPosition.x * ray.direction.x + localPosition.y * ray.direction.y);  // минус!
-    float c = pow(localPosition.x, 2) + pow(localPosition.y, 2) - pow(target.signatureSize, 2);
+    float a = ray.direction.x * ray.direction.x + ray.direction.y * ray.direction.y;
+    float b = 2 * (localPosition.x * ray.direction.x + localPosition.y * ray.direction.y);
+    float c = localPosition.x * localPosition.x + localPosition.y * localPosition.y - target.signatureSize * target.signatureSize;
     
-    float d = pow(b, 2) - 4 * a * c;
+    float d = b * b - 4 * a * c;
     
     if (d < 0) return false;
     
@@ -22,10 +22,11 @@ bool Raycast(Ray ray, Object target)
     return false;
 }
 
-bool raycastPoll(Ray ray, ObjectArray* objects, Object** hit)
+bool raycastPoll(Ray ray, ObjectArray* objects, Object** hit, bool* collision)
 {
     float maxDist = 50;
     float closestDist = FLT_MAX;
+    *collision = false;
 	for (int i = 0; i < objects->count; i++)
 	{
 		if (Raycast(ray, objects->items[i]))
@@ -37,7 +38,11 @@ bool raycastPoll(Ray ray, ObjectArray* objects, Object** hit)
                 {
                     closestDist = dist;
                     *hit = &objects->items[i];
-                }  
+                }
+            }
+            if (dist <= objects->items[i].signatureSize + 1)
+            {
+                *collision = true;
             }
 		}
 	}
