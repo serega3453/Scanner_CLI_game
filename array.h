@@ -1,20 +1,6 @@
 #include "structures.h"
 #include <stdlib.h>
 
-typedef struct
-{
-	Object* items;
-	int count;
-	int capacity;
-} ObjectArray;
-
-typedef struct
-{
-	int* items;
-	int count;
-	int capacity;
-} IntArray;
-
 void addObject(ObjectArray* arr, Object obj)
 {
 	if (arr->count >= arr->capacity)

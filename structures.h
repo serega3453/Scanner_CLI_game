@@ -15,3 +15,17 @@ typedef struct
 	Vector2 origin;
 	Vector2 direction;
 } Ray;
+
+typedef struct
+{
+	Object* items;
+	int count;
+	int capacity;
+} ObjectArray;
+
+typedef struct
+{
+	int* items;
+	int count;
+	int capacity;
+} IntArray;

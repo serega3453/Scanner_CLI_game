@@ -5,6 +5,7 @@
 #include "raycast.h"
 #include "terminal.h"
 #include <ctype.h>
+#include <windows.h>
 
 #define RED "\033[31m"
 #define GREEN "\033[32m"
@@ -33,9 +34,22 @@ const char* colors[] =
 	RESET
 };
 
-IntArray touched = {0, 0, 0};
+int maxObjects = 150;	//SAVE
 
-int maxObjects = 2000;
+ObjectArray objects = {NULL, 0, 0};	//SAVE
+IntArray touched = {NULL, 0, 0};	//SAVE
+
+Vector2 playerPos = {0, 0};	//SAVE
+float playerTurn = 180;	//SAVE
+float step = 0.5;	//SAVE
+float turnStep = 2;	//SAVE
+
+int scanStart = 0;	//SAVE
+int scanStop = 360;	//SAVE
+int scanStep = 2;	//SAVE
+
+int renderMode = 0;	//SAVE
+int scanMode = 360;	//SAVE
 
 float randRange(float min, float max)
 {
@@ -118,28 +132,120 @@ Object* rendering(float scanStart, float scanStop, float scanStep, float playerT
 	return collisionObject;
 }
 
-void cycle(void)
+bool save_game(void) {
+    FILE *f = fopen("save.bin", "wb");
+    if (!f) return false;
+
+    int settingsInt[6] = {
+        maxObjects,
+        scanStart,
+        scanStop,
+        scanStep,
+        renderMode,
+        scanMode
+    };
+    float settingsFloat[3] = {playerTurn, step, turnStep};
+
+    fwrite(settingsInt, sizeof(int), 6, f);
+    fwrite(settingsFloat, sizeof(float), 3, f);
+
+    // 2. Глобальные переменные (сохраняем их напрямую)
+    fwrite(&maxObjects, sizeof(int), 1, f);
+    fwrite(&playerTurn, sizeof(float), 1, f);
+    fwrite(&step, sizeof(float), 1, f);
+    fwrite(&turnStep, sizeof(float), 1, f);
+    fwrite(&scanStart, sizeof(int), 1, f);
+    fwrite(&scanStop, sizeof(int), 1, f);
+    fwrite(&scanStep, sizeof(int), 1, f);
+    fwrite(&renderMode, sizeof(int), 1, f);
+    fwrite(&scanMode, sizeof(int), 1, f);
+
+    // 3. ObjectArray (сохраняем count + сами объекты)
+    fwrite(&objects.count, sizeof(int), 1, f);
+    if (objects.count > 0) {
+        fwrite(objects.items, sizeof(Object), objects.count, f);
+    }
+
+    // 4. IntArray (сохраняем count + сами int'ы)
+    fwrite(&touched.count, sizeof(int), 1, f);
+    if (touched.count > 0) {
+        fwrite(touched.items, sizeof(int), touched.count, f);
+    }
+
+    // 5. PlayerPos
+    fwrite(&playerPos, sizeof(Vector2), 1, f);
+
+    fclose(f);
+    return true;
+}
+
+bool load_game(void) {
+    FILE *f = fopen("save.bin", "rb");
+    if (!f) return false;
+
+    int settingsInt[6];
+    float settingsFloat[3];
+    
+    fread(settingsInt, sizeof(int), 6, f);
+    fread(settingsFloat, sizeof(float), 3, f);
+
+    fread(&maxObjects, sizeof(int), 1, f);
+    fread(&playerTurn, sizeof(float), 1, f);
+    fread(&step, sizeof(float), 1, f);
+    fread(&turnStep, sizeof(float), 1, f);
+    fread(&scanStart, sizeof(int), 1, f);
+    fread(&scanStop, sizeof(int), 1, f);
+    fread(&scanStep, sizeof(int), 1, f);
+    fread(&renderMode, sizeof(int), 1, f);
+    fread(&scanMode, sizeof(int), 1, f);
+
+    // 3. Загружаем ObjectArray
+    int count;
+    fread(&count, sizeof(int), 1, f);
+    
+    // Очищаем старые данные
+    if (objects.items) free(objects.items);
+    
+    objects.count = count;
+    objects.capacity = count;
+    objects.items = malloc(sizeof(Object) * count);
+    
+    if (count > 0) {
+        fread(objects.items, sizeof(Object), count, f);
+    }
+
+    // 4. Загружаем IntArray
+    fread(&count, sizeof(int), 1, f);
+    
+    if (touched.items) free(touched.items);
+    
+    touched.count = count;
+    touched.capacity = count;
+    touched.items = malloc(sizeof(int) * count);
+    
+    if (count > 0) {
+        fread(touched.items, sizeof(int), count, f);
+    }
+
+    // 5. PlayerPos
+    fread(&playerPos, sizeof(Vector2), 1, f);
+
+    fclose(f);
+    return true;
+}
+
+void init(void)
 {
 	srand(time(NULL));
 
-	ObjectArray objects = {NULL, 0, 0};
-
-	for (int i = 0; i < maxObjects; i++)
+	if (touched.items) 
 	{
-		addObject(&objects, (Object){.position = {randRange(-1000, 1000), randRange(-1500, 1500)}, .shape = circle, .signatureSize = randRange(1, 10), .id = i, .alive = true});
-	}
+    	free(touched.items);
+    	touched.items = NULL;
+    }
 
-	Vector2 playerPos = {0, 0};
-	float playerTurn = 180;
-	float step = 0.5;
-	float turnStep = 2;
-
-	int scanStart = 0;
-	int scanStop = 360;
-	int scanStep = 2;
-
-	int renderMode = 0;
-	int scanMode = 360;
+    touched.count = 0;
+    touched.capacity = 0;
 
 	printf("1 - one line, 0 - not one line\n");
 	scanf("%d", &renderMode);
@@ -154,10 +260,49 @@ void cycle(void)
 		scanStep = 1;
 	}
 
-	terminal_init();
+	for (int i = 0; i < maxObjects; i++)
+	{
+		addObject(&objects, (Object){.position = {randRange(-75, 75), randRange(-75, 75)}, .shape = circle, .signatureSize = randRange(1, 10), .id = i, .alive = true});
+	}
 
     printf("GAME STARTED...");
+}
 
+void menu(void)
+{
+    char option;
+    printf("\nSelect an option: \n");
+    printf("0 - new game\n");
+    printf("1 - load game\n");
+    printf("2 - save game\n");
+    printf("3 - settings");
+    printf("q - exit\n");
+
+    scanf(" %c", &option); 
+
+    switch (option)
+    {
+    	case '0':
+    		init();
+    		break;
+        case '1':
+            load_game();
+            break;
+        case '2':
+            save_game();
+            break;
+        case '3':
+        	//settings_change();
+        	break;
+        case 'q':
+        	exit(0);
+            break;
+    }
+}
+
+void cycle(void)
+{
+	printf("%f", objects.items[0].position.x);
 	while(1)
 	{
 		if (renderMode == 1)
@@ -221,8 +366,7 @@ void cycle(void)
 			case ' ':
 				break;
 			case 27:
-				terminal_restore();
-				return;
+				menu();
 				break;
 		}
 	}
@@ -230,6 +374,9 @@ void cycle(void)
 
 int main(void)
 {
+	terminal_init();
+	menu();
+
 	cycle();
 
 	return 0;
