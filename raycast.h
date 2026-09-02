@@ -54,3 +54,37 @@ bool raycastPoll(Ray ray, ObjectArray* objects, Object** hit, bool* collision)
     }
 	return true;
 }
+
+bool PointcastHit(Vector2 point, ObjectArray* objects, Object** hit)
+{
+    for (int i = 0; i < objects->count; i++)
+    {
+        if (Vector2Distance(point, objects->items[i].position) < objects->items[i].signatureSize)
+        {
+            return true;
+            *hit = &objects->items[i];
+        }
+    }
+    return false;
+}
+
+bool Pointcast(Vector2 point, ObjectArray* objects)
+{
+    for (int i = 0; i < objects->count; i++)
+    {
+        if (Vector2Distance(point, objects->items[i].position) < objects->items[i].signatureSize)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool bounds(Vector2 point, Vector2 range)
+{
+    if (((point.x > -range.x/2) && (point.x < range.x/2)) && ((point.y > -range.y/2) && (point.y < range.y/2)))
+    {
+        return true;
+    }
+    return false;
+}
