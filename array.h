@@ -1,76 +1,21 @@
+#ifndef ARRAY_H
+#define ARRAY_H
+
 #include "structures.h"
 #include <stdlib.h>
 
-void addObject(ObjectArray* arr, Object obj)
-{
-	if (arr->count >= arr->capacity)
-	{
-		arr->capacity = arr->capacity ? arr->capacity * 2 : 4;
-		arr->items = realloc(arr->items, arr->capacity * sizeof(Object));
-	}
-	arr->items[arr->count++] = obj;
-}
+void addObject(ObjectArray* arr, Object obj);
 
-void RemoveObjectByIndex(ObjectArray* arr, int index) 
-{
-    for (int i = index; i < arr->count - 1; i++)
-        arr->items[i] = arr->items[i + 1];
-    arr->count--;
-}
+void RemoveObjectByIndex(ObjectArray* arr, int index);
 
-void RemoveObjectById(ObjectArray *arr, int id)
-{
-    if (arr == NULL || arr->items == NULL || arr->count == 0) return;
+void RemoveObjectById(ObjectArray *arr, int id);
 
-    int index = -1;
-    for (int i = 0; i < arr->count; i++)
-    {
-        if (arr->items[i].id == id)
-        {
-            index = i;
-            break;
-        }
-    }
+void FreeObjects(ObjectArray* arr);
 
-    if (index == -1) return;
+void addInt(IntArray* arr, int i);
 
-    for (int i = index; i < arr->count - 1; i++)
-    {
-        arr->items[i] = arr->items[i + 1];
-    }
+void RemoveInt(IntArray* arr, int index);
 
-    arr->count--;
-}
+void FreeInts(IntArray* arr);
 
-void FreeObjects(ObjectArray* arr) 
-{
-    free(arr->items);
-    arr->items = NULL;
-    arr->count = 0;
-    arr->capacity = 0;
-}
-
-void addInt(IntArray* arr, int i)
-{
-	if (arr->count >= arr->capacity)
-	{
-		arr->capacity = arr->capacity ? arr->capacity * 2 : 4;
-		arr->items = realloc(arr->items, arr->capacity * sizeof(int));
-	}
-	arr->items[arr->count++] = i;
-}
-
-void RemoveInt(IntArray* arr, int index) 
-{
-    for (int i = index; i < arr->count - 1; i++)
-        arr->items[i] = arr->items[i + 1];
-    arr->count--;
-}
-
-void FreeInts(IntArray* arr) 
-{
-    free(arr->items);
-    arr->items = NULL;
-    arr->count = 0;
-    arr->capacity = 0;
-}
+#endif

@@ -1,13 +1,15 @@
-#include "shapes.h"
+#ifndef STRUCTURES_H
+#define STRUCTURES_H
+
 #include "types.h"
 
 typedef struct
 {
 	Vector2 position;
-	Shape shape;
 	float signatureSize;
 	int id;
 	bool alive;
+	const char* color;
 } Object;
 
 typedef struct
@@ -29,3 +31,5 @@ typedef struct
 	int count;
 	int capacity;
 } IntArray;
+
+#endif
